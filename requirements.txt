@@ -1,2 +1,15 @@
 streamlit
 PyMuPDF
+openai
+langchain
+langchain_openai
+langchain_experimental 
+langchainhub
+pinecone-client
+tiktoken
+python-dotenv
+docx2txt
+requests
+numpy
+pandas
+pypdf
