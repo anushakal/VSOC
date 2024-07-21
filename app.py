@@ -17,21 +17,6 @@ def upload_pdf():
         return uploaded_file
     return None
 
-def process_pdf(pdf_processor, uploaded_file):
-    st.session_state.file_uploaded = True
-    st.write("Processing the PDF...")
-    pdf_process = pdf_processor.process_pdf(uploaded_file)
-    if pdf_process == True:
-        st.session_state.pdf_processed = True
-        st.write("PDF processed successfully! You can now generate questions.")
-    else:
-        st.error("Failed to process the PDF.")
-
-def generate_quiz(pdf_processor):
-    if st.session_state.pdf_processed and st.button("Generate Quiz"):
-        st.write("Generating quiz based on the processed PDF...")
-        answer = pdf_processor.generate_questions()
-        st.write(answer)
 
 def main():
 
