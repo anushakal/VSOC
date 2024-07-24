@@ -4,11 +4,9 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pinecone
 from langchain_community.vectorstores import Pinecone
 from langchain_openai import OpenAIEmbeddings
-from pinecone import PodSpec
 from pinecone import ServerlessSpec
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
-from dotenv import find_dotenv, load_dotenv
+from langchain_openai import ChatOpenAI
       
 class Pdf():
 
@@ -67,13 +65,14 @@ class Pdf():
         self.vector_store = Pinecone.from_documents(chunks, embeddings, index_name=index_name)
         print("created index")
 
-  def generate_questions(self, query = "Generate 5 MCQS based on the content of this PDF."):
+  def generate_questions(self, query = "Generate 5 Multiple Choice Questions based on the given content."):
       if self.vector_store is None:
             raise ValueError("Vector store is not initialized.")
       llm = ChatOpenAI(temperature=1, model_name="gpt-3.5-turbo")
       retriever = self.vector_store.as_retriever(search_type='similarity', search_kwargs={'k': 3})
       chain = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
-      answer = chain.run(query)
+      #answer = chain.run(query)
+      answer = chain.invoke(query)['result']
       print(f"Answer: {answer}")
       return answer
 
