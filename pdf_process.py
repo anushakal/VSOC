@@ -8,16 +8,19 @@ from pinecone import PodSpec
 from pinecone import ServerlessSpec
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
-from dotenv import find_dotenv, load_dotenv
       
 class Pdf():
 
   pc = None
   vector_store = None
+  pinecone_api_key = None
+  openai_api_key = None
 
-  def __init__(self) -> None:
+  def __init__(self, pinecone_api_key, openai_api_key) -> None:
+      self.pinecone_api_key = pinecone_api_key
+      self.openai_api_key = openai_api_key
       self.vector_store = None
-      self.pc = pinecone.Pinecone()
+      self.pc = pinecone.Pinecone(api_key = self.pinecone_api_key)
 
   def load_pdf_document(self, uploaded_file):
     if uploaded_file.type == "application/pdf":
@@ -46,7 +49,7 @@ class Pdf():
       self.pc.delete_index(index_name)
 
   def insert_or_fetch_embeddings(self, index_name, chunks):
-      embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536)
+      embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536, api_key = self.openai_api_key)
 
       if index_name in self.pc.list_indexes().names():
         print(f'Index name: {index_name} already exists, loading embeddings')
