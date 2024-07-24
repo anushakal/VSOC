@@ -75,8 +75,10 @@ class Pdf():
       llm = ChatOpenAI(temperature=1, model_name="gpt-3.5-turbo")
       retriever = self.vector_store.as_retriever(search_type='similarity', search_kwargs={'k': 3})
       chain = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
-      #answer = chain.run(query)
-      answer = chain.invoke(query)['result']
+      # Retrieve documents based on the query
+      relevant_docs = retriever.get_relevant_documents(query)
+      # Run the chain with the relevant documents to generate the questions
+      answer = chain.run(input_documents=relevant_docs, query=query)
       print(f"Answer: {answer}")
       return answer
 
