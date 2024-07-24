@@ -7,7 +7,7 @@ from langchain_openai import OpenAIEmbeddings
 from pinecone import PodSpec
 from pinecone import ServerlessSpec
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
       
 class Pdf():
 
