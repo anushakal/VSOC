@@ -1,9 +1,14 @@
 import streamlit as st
-from dotenv import find_dotenv, load_dotenv
 from pdf_process import *
 
+pinecone_api_key = ""
+openai_api_key = ""
+
 def load_api_keys():
-    load_dotenv(find_dotenv(".env.txt"))
+    global pinecone_api_key
+    pinecone_api_key = st.secrets['PINECONE_API_KEY']
+    global openai_api_key
+    openai_api_key = st.secrets['OPENAI_API_KEY']
 
 def initialize_session_state():
     if 'file_uploaded' not in st.session_state:
@@ -21,7 +26,7 @@ def upload_pdf():
 def main():
 
     load_api_keys()
-    pdf_processor = Pdf()
+    pdf_processor = Pdf(pinecone_api_key, openai_api_key)
     initialize_session_state()
     st.title("Vizuara Adaptive Q/A Generator")
     st.subheader("Answer adaptive questions based on your uploaded PDF!")
