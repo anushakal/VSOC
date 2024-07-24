@@ -89,17 +89,6 @@ class Pdf():
   
 
 
-def load_api_keys():
-    load_dotenv(find_dotenv(".env.txt"))
-
-if __name__ == "__main__":
-   load_api_keys()
-   pdf = Pdf()
-   pdf.process_pdf()
-   pdf.generate_questions()
-
-
-
 
 
 
