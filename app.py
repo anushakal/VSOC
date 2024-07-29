@@ -36,6 +36,7 @@ def main():
             st.write(f"File name: {uploaded_file.name}")
             st.write(f"File type: {uploaded_file.type}")
             st.write(f"File size: {uploaded_file.size} bytes")
+            st.write("PDF DATA:")
             answer = pdf_processor.process_pdf(uploaded_file)
             st.write(answer)
         else:
