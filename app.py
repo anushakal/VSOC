@@ -33,6 +33,9 @@ def main():
     uploaded_file = upload_pdf()
     if st.button("Generate Quiz"):
         if uploaded_file:
+            st.write(f"File name: {uploaded_file.name}")
+            st.write(f"File type: {uploaded_file.type}")
+            st.write(f"File size: {uploaded_file.size} bytes")
             answer = pdf_processor.process_pdf(uploaded_file)
             st.write(answer)
         else:
