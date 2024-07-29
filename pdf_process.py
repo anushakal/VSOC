@@ -48,13 +48,13 @@ class Pdf():
     else:
       self.pc.delete_index(index_name)
     
-  def check_for_deleted_index(self, index_name='all'):
+  def check_index_status(self, index_name='all'):
     try:
       old_index = self.pc.describe_index(index_name)
+      return True
     except Exception as e:
        print("Index not found (404).")
-       return True
-    return False
+       return False
   
 
   def insert_or_fetch_embeddings(self, index_name, chunks):
@@ -64,6 +64,7 @@ class Pdf():
         print(f'Index name: {index_name} already exists, loading embeddings')
         self.vector_store = Pinecone.from_existing_index(index_name,embeddings)
         print("fetched index")
+
       else:
         print(f"Creating Index: {index_name} and embeddings")
         #pc.create_index(name=index_name, dimension=1536, metric='cosine', spec = PodSpec(environment='gcp-starter'))
@@ -96,9 +97,10 @@ class Pdf():
       pdf_data = self.load_pdf_document(uploaded_file)
       pdf_chunks = self.chunk_pdf_data(pdf_data)
       self.delete_pinecone_index()
-      ans = self.check_for_deleted_index()
-      return ans
-      # self.insert_or_fetch_embeddings(index_name="photosynthesis", chunks=pdf_chunks)
+      ans1 = self.check_index_status()
+      self.insert_or_fetch_embeddings(index_name="photosynthesis", chunks=pdf_chunks)
+      ans2 = self.check_index_status(index_name='photosynthesis')
+      return [ans1, ans2]
       # answer = self.generate_questions()
       # return answer
 
