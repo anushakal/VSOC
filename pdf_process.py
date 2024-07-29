@@ -7,6 +7,7 @@ from langchain_openai import OpenAIEmbeddings
 from pinecone import ServerlessSpec
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
+from pinecone import PineconeException
       
 class Pdf():
 
@@ -48,9 +49,10 @@ class Pdf():
       self.pc.delete_index(index_name)
     
   def check_for_deleted_index(self, index_name='all'):
-    old_index = self.pc.describe_index(index_name)
-
-    if old_index.status == 404:
+    try:
+      old_index = self.pc.describe_index(index_name)
+    except Exception as e:
+       print("Index not found (404).")
        return True
     return False
   
