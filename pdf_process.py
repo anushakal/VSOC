@@ -84,9 +84,8 @@ class Pdf():
 
   def process_pdf(self, uploaded_file):
       pdf_data = self.load_pdf_document(uploaded_file)
-      return pdf_data
-      # pdf_chunks = self.chunk_pdf_data(pdf_data)
-      # print("chunk done")
+      pdf_chunks = self.chunk_pdf_data(pdf_data)
+      return len(pdf_chunks)
       # self.delete_pinecone_index()
       # self.insert_or_fetch_embeddings(index_name="photosynthesis", chunks=pdf_chunks)
       # answer = self.generate_questions()
