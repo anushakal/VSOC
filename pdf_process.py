@@ -46,6 +46,14 @@ class Pdf():
 
     else:
       self.pc.delete_index(index_name)
+    
+  def check_for_deleted_index(self, index_name='all'):
+    old_index = self.pc.describe_index(index_name)
+
+    if old_index.status == 404:
+       return True
+    return False
+  
 
   def insert_or_fetch_embeddings(self, index_name, chunks):
       embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536, api_key = self.openai_api_key)
@@ -85,8 +93,9 @@ class Pdf():
   def process_pdf(self, uploaded_file):
       pdf_data = self.load_pdf_document(uploaded_file)
       pdf_chunks = self.chunk_pdf_data(pdf_data)
-      return len(pdf_chunks)
-      # self.delete_pinecone_index()
+      self.delete_pinecone_index()
+      ans = self.check_for_deleted_index()
+      return ans
       # self.insert_or_fetch_embeddings(index_name="photosynthesis", chunks=pdf_chunks)
       # answer = self.generate_questions()
       # return answer
