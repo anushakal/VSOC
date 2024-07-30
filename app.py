@@ -1,12 +1,9 @@
 import streamlit as st
 from pdf_process import *
 
-pinecone_api_key = ""
 openai_api_key = ""
 
 def load_api_keys():
-    global pinecone_api_key
-    pinecone_api_key = st.secrets['PINECONE_API_KEY']
     global openai_api_key
     openai_api_key = st.secrets['OPENAI_API_KEY']
 
@@ -26,13 +23,15 @@ def upload_pdf():
 def main():
 
     load_api_keys()
-    pdf_processor = Pdf(pinecone_api_key, openai_api_key)
+    pdf_processor = Pdf(openai_api_key)
     initialize_session_state()
     st.title("Vizuara Adaptive Q/A Generator")
     st.subheader("Answer adaptive questions based on your uploaded PDF!")
     uploaded_file = upload_pdf()
     if st.button("Generate Quiz"):
         if uploaded_file:
+            st.write(f"Uploaded File name: {uploaded_file.name}")
+            st.write("Following are 5 MCQs based on the uploaded PDF:")
             answer = pdf_processor.process_pdf(uploaded_file)
             st.write(answer)
         else:
