@@ -1,28 +1,21 @@
 import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import pinecone
-from langchain_community.vectorstores import Pinecone
 from langchain_openai import OpenAIEmbeddings
 from pinecone import ServerlessSpec
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
-from pinecone import PineconeException
 from langchain_community.vectorstores import FAISS
 from langchain_core.vectorstores import VectorStoreRetriever
 
 class Pdf():
 
-  pc = None
   vector_store = None
-  pinecone_api_key = None
   openai_api_key = None
 
-  def __init__(self, pinecone_api_key, openai_api_key) -> None:
-      self.pinecone_api_key = pinecone_api_key
+  def __init__(self, openai_api_key) -> None:
       self.openai_api_key = openai_api_key
       self.vector_store = None
-      self.pc = pinecone.Pinecone(api_key = self.pinecone_api_key)
 
   def load_pdf_document(self, uploaded_file):
     if uploaded_file.type == "application/pdf":
@@ -40,85 +33,26 @@ class Pdf():
       chunks = text_splitter.split_documents(pdf_data)
       return chunks
 
-  def delete_pinecone_index(self, index_name='all'):
-    if index_name == 'all':
-      indexes = self.pc.list_indexes().names()
-      print("Deleting all indices")
-      for index in indexes:
-        self.pc.delete_index(index)
-
-    else:
-      self.pc.delete_index(index_name)
-    
-  def check_index_status(self, index_name='all'):
-    try:
-      old_index = self.pc.describe_index(index_name)
-      return True
-    except Exception as e:
-       print("Index not found (404).")
-       return False
-  
-
-  def insert_or_fetch_embeddings(self, index_name, chunks):
+  def create_embeddings_and_index(self, pdf_chunks):
       embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536, api_key = self.openai_api_key)
-
-      if index_name in self.pc.list_indexes().names():
-        print(f'Index name: {index_name} already exists, loading embeddings')
-        self.vector_store = Pinecone.from_existing_index(index_name,embeddings)
-        print("fetched index")
-
-      else:
-        print(f"Creating Index: {index_name} and embeddings")
-        #pc.create_index(name=index_name, dimension=1536, metric='cosine', spec = PodSpec(environment='gcp-starter'))
-        self.pc.create_index(
-          name = index_name,
-          dimension = 1536,
-          metric = 'cosine',
-          spec = ServerlessSpec(
-              cloud = 'aws',
-              region = 'us-east-1'
-          )
-        )
-        self.vector_store = Pinecone.from_documents(chunks, embeddings, index_name=index_name)
-        print("created index")
-
-  def generate_questions(self, query = "Generate 5 Multiple Choice Questions based on the given content."):
-      if self.vector_store is None:
-            raise ValueError("Vector store is not initialized.")
+      self.vector_store = FAISS.from_documents(pdf_chunks, embeddings)
+    
+  def answer_query(self, retriever_query = "Frame 5 MCQs based on the points covered in the document."):
+      retriever = self.vector_store.as_retriever()
       llm = ChatOpenAI(temperature=1, model_name="gpt-3.5-turbo")
-      retriever = self.vector_store.as_retriever(search_type='similarity', search_kwargs={'k': 3})
-      chain = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
-      # Retrieve documents based on the query
-      relevant_docs = retriever.get_relevant_documents(query)
-      # Run the chain with the relevant documents to generate the questions
-      answer = chain.run(input_documents=relevant_docs, query=query)
-      print(f"Answer: {answer}")
-      return answer
+      qa = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
+      results = qa.invoke(retriever_query)
+      print(results)
+      return results['result']
 
   def process_pdf(self, uploaded_file):
       pdf_data = self.load_pdf_document(uploaded_file)
       pdf_chunks = self.chunk_pdf_data(pdf_data)
-      self.delete_pinecone_index()
-      ans1 = self.check_index_status()
-      self.insert_or_fetch_embeddings(index_name="photosynthesis", chunks=pdf_chunks)
-      ans2 = self.check_index_status(index_name='photosynthesis')
-      return [ans1, ans2]
-      # answer = self.generate_questions()
-      # return answer
+      self.create_embeddings_and_index(pdf_chunks)
+      answer = self.answer_query()
+      return answer
 
 
-  def using_faiss(self, uploaded_file):
-    pdf_data = self.load_pdf_document(uploaded_file)
-    pdf_chunks = self.chunk_pdf_data(pdf_data)
-    embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536, api_key = self.openai_api_key)
-    library = FAISS.from_documents(pdf_chunks, embeddings)
-    retriever = library.as_retriever()
-    llm = ChatOpenAI(temperature=1, model_name="gpt-3.5-turbo")
-    qa = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
-    retriever_query = "Frame 5 MCQs based on the points covered in the document."
-    results = qa.invoke(retriever_query)
-    print(results)
-    return results['result']
   
 
 
