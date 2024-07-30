@@ -32,7 +32,7 @@ def main():
         if uploaded_file:
             st.write(f"Uploaded File name: {uploaded_file.name}")
             st.write("Following are 5 MCQs based on the uploaded PDF:")
-            answer = pdf_processor.using_faiss(uploaded_file)
+            answer = pdf_processor.process_pdf(uploaded_file)
             st.write(answer)
         else:
             st.error("Please upload a PDF file before processing.")
