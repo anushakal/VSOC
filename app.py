@@ -36,11 +36,8 @@ def main():
             st.write(f"File name: {uploaded_file.name}")
             st.write(f"File type: {uploaded_file.type}")
             st.write(f"File size: {uploaded_file.size} bytes")
-            answer = pdf_processor.process_pdf(uploaded_file)
-            st.write("Index Deletion check:")
-            st.write(answer[0])
-            st.write('Index creation check:')
-            st.write(answer[1])
+            answer = pdf_processor.using_faiss(uploaded_file)
+            st.write(answer)
         else:
             st.error("Please upload a PDF file before processing.")
 

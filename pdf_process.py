@@ -8,7 +8,9 @@ from pinecone import ServerlessSpec
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from pinecone import PineconeException
-      
+from langchain_community.vectorstores import FAISS
+from langchain_core.vectorstores import VectorStoreRetriever
+
 class Pdf():
 
   pc = None
@@ -103,6 +105,25 @@ class Pdf():
       return [ans1, ans2]
       # answer = self.generate_questions()
       # return answer
+
+
+  def using_faiss(self, uploaded_file):
+    pdf_data = self.load_pdf_document(uploaded_file)
+    pdf_chunks = self.chunk_pdf_data(pdf_data)
+    embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536, api_key = self.openai_api_key)
+    library = FAISS.from_documents(pdf_chunks, embeddings)
+    retriever = library.as_retriever()
+    llm = ChatOpenAI(temperature=1, model_name="gpt-3.5-turbo")
+    qa = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
+    retriever_query = "Frame 5 MCQs based on the points covered in the document."
+    results = qa.invoke(retriever_query)
+    print(results)
+    return results['result']
+  
+
+
+
+
 
   
 
