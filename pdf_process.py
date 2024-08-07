@@ -7,15 +7,18 @@ from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.vectorstores import VectorStoreRetriever
+import ast
 
 class Pdf():
 
   vector_store = None
   openai_api_key = None
+  llm = None
 
   def __init__(self, openai_api_key) -> None:
       self.openai_api_key = openai_api_key
       self.vector_store = None
+      self.llm = ChatOpenAI(temperature=1, model_name="gpt-3.5-turbo")
 
   def load_pdf_document(self, uploaded_file):
     if uploaded_file.type == "application/pdf":
@@ -37,20 +40,30 @@ class Pdf():
       embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536, api_key = self.openai_api_key)
       self.vector_store = FAISS.from_documents(pdf_chunks, embeddings)
     
-  def answer_query(self, retriever_query = "Frame 5 MCQs based on the points covered in the document."):
+  def answer_query(self, retriever_query = """Frame a MCQ based on the points covered in the document.\n
+                    The MCQ should have a question, options and a correct_answer.\n
+                    The question, options or the correct answer should not contain any sort of prefix like 'Question:'.\n 
+                    The options should not have any sort of numbering or sequencing and seperated by a new line character.\n
+                    The correct answer should contain the entire option.\n
+                    Print this MCQ as: Question followed 2 new line characters the list of options then 2 new line characters and then correct_answer. No other formatting strictly."""):
       retriever = self.vector_store.as_retriever()
-      llm = ChatOpenAI(temperature=1, model_name="gpt-3.5-turbo")
-      qa = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
-      results = qa.invoke(retriever_query)
-      print(results)
-      return results['result']
+      qa = RetrievalQA.from_chain_type(llm=self.llm, chain_type='stuff', retriever=retriever)
+      result = qa.invoke(retriever_query)['result']
+      print(type(result))
+      print("\nr: ",repr(result))
+      parts = result.strip().split("\n\n")
+      question = parts[0]
+      options = parts[1].split("\n")
+      correct_answer = parts[-1].split("\n")[-1]
+
+      return question, options, correct_answer
+
 
   def process_pdf(self, uploaded_file):
       pdf_data = self.load_pdf_document(uploaded_file)
       pdf_chunks = self.chunk_pdf_data(pdf_data)
       self.create_embeddings_and_index(pdf_chunks)
-      answer = self.answer_query()
-      return answer
+      return self.answer_query()
 
 
   
