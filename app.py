@@ -25,14 +25,17 @@ def upload_pdf():
         return uploaded_file
     return None
 
+def display_title():
+    st.title("Vizuara Adaptive Q/A Generator")
+    st.subheader("Answer adaptive questions based on your uploaded PDF!")
+
 
 def main():
 
     load_api_keys()
     pdf_processor = Pdf(openai_api_key)
     initialize_session_state()
-    st.title("Vizuara Adaptive Q/A Generator")
-    st.subheader("Answer adaptive questions based on your uploaded PDF!")
+    display_title()
     uploaded_file = upload_pdf()
     if st.button("Generate Quiz"):
         if uploaded_file:
