@@ -63,7 +63,7 @@ class Pdf():
       pdf_data = self.load_pdf_document(uploaded_file)
       pdf_chunks = self.chunk_pdf_data(pdf_data)
       self.create_embeddings_and_index(pdf_chunks)
-      return self.answer_query()
+      #return self.answer_query()
 
 
   
