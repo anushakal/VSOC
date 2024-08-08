@@ -18,6 +18,8 @@ def initialize_session_state():
         st.session_state.options = []
     if 'correct_answer' not in st.session_state:
         st.session_state.correct_answer = None
+    if 'answer_feedback' not in st.session_state:
+        st.session_state.answer_feedback = None
 
 def upload_pdf():
     if not st.session_state.file_uploaded:
@@ -49,6 +51,12 @@ def display_question():
             if st.session_state.selected_option:
                 st.write(f"You selected: {st.session_state.selected_option}")
                 st.markdown(f"**Correct Answer: {st.session_state.correct_answer}**")
+                # Compare the selected option with the correct answer
+                if st.session_state.selected_option == st.session_state.correct_answer:
+                    st.success("Correct! Well done.")
+                else:
+                    st.error("Incorrect. Try again.")
+
             else:
                 st.write("You have not selected any option yet.")
 
@@ -69,6 +77,9 @@ def main():
             st.error("Please upload a PDF file before processing.")
     
     display_question()
+
+    if st.button("Stop Quiz"):
+        st.write("Quiz stopped")
 
     
     
