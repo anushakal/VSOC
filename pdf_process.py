@@ -44,7 +44,7 @@ class Pdf():
                   Think carefully about which key points are important to highlight. Create a question, then choose unique options and a correct answer.\n
                   The MCQ should have a question, options and a correct_answer.\n
                   The question, options or the correct answer should not contain any sort of prefix like 'Question:'.\n 
-                  The options should not have any sort of numbering or sequencing and seperated by a new line character.\n
+                  The options should not have any sort of numbering or sequencing like 1. or a. and seperated by a new line character.\n
                   The correct answer should contain the entire option.\n
                   Print this MCQ as: Question followed 2 new line characters the list of options then 2 new line characters and then correct_answer. No other formatting strictly."""):
       
