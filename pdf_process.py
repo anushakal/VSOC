@@ -40,12 +40,14 @@ class Pdf():
       embeddings = OpenAIEmbeddings(model = 'text-embedding-3-small', dimensions=1536, api_key = self.openai_api_key)
       self.vector_store = FAISS.from_documents(pdf_chunks, embeddings)
     
-  def answer_query(self, retriever_query = """Frame a MCQ based on the points covered in the document.\n
-                    The MCQ should have a question, options and a correct_answer.\n
-                    The question, options or the correct answer should not contain any sort of prefix like 'Question:'.\n 
-                    The options should not have any sort of numbering or sequencing and seperated by a new line character.\n
-                    The correct answer should contain the entire option.\n
-                    Print this MCQ as: Question followed 2 new line characters the list of options then 2 new line characters and then correct_answer. No other formatting strictly."""):
+  def answer_query(self, retriever_query = """Please analyze the document and generate an MCQ that focuses on different aspects of the content.\n
+                  Think carefully about which key points are important to highlight. Create a question, then choose unique options and a correct answer.\n
+                  The MCQ should have a question, options and a correct_answer.\n
+                  The question, options or the correct answer should not contain any sort of prefix like 'Question:'.\n 
+                  The options should not have any sort of numbering or sequencing and seperated by a new line character.\n
+                  The correct answer should contain the entire option.\n
+                  Print this MCQ as: Question followed 2 new line characters the list of options then 2 new line characters and then correct_answer. No other formatting strictly."""):
+      
       retriever = self.vector_store.as_retriever()
       qa = RetrievalQA.from_chain_type(llm=self.llm, chain_type='stuff', retriever=retriever)
       result = qa.invoke(retriever_query)['result']
