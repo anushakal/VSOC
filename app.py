@@ -18,6 +18,19 @@ def initialize_session_state():
         st.session_state.options = []
     if 'correct_answer' not in st.session_state:
         st.session_state.correct_answer = None
+    if 'answer_feedback' not in st.session_state:
+        st.session_state.answer_feedback = None
+    if 'generate_button_click' not in st.session_state:
+        st.session_state.generate_button_click = False
+
+def reset_session_state():
+    st.session_state.file_uploaded = False
+    st.session_state.question = None
+    st.session_state.options = []
+    st.session_state.correct_answer = None
+    st.session_state.answer_feedback = None
+    st.session_state.generate_button_click = False
+
 
 def upload_pdf():
     if not st.session_state.file_uploaded:
@@ -43,14 +56,18 @@ def display_question():
 
         # Display the options as radio buttons
         st.session_state.selected_option = st.radio("Select an option:", st.session_state.options)
-        
-        # Display the selected answer when the button is clicked
-        if st.button("Display answer"):
-            if st.session_state.selected_option:
-                st.write(f"You selected: {st.session_state.selected_option}")
-                st.markdown(f"**Correct Answer: {st.session_state.correct_answer}**")
-            else:
-                st.write("You have not selected any option yet.")
+
+def display_answer():
+    if st.session_state.selected_option:
+        st.write(f"You selected: {st.session_state.selected_option}")
+        st.markdown(f"**Correct Answer: {st.session_state.correct_answer}**")
+        if st.session_state.selected_option == st.session_state.correct_answer:
+            st.success("Correct! Well done.")
+        else:
+            st.error("Incorrect. Try again.")
+
+    else:
+        st.write("You have not selected any option yet.")
 
 def main():
 
@@ -58,21 +75,26 @@ def main():
     pdf_processor = Pdf(openai_api_key)
     initialize_session_state()
     display_title()
+
     uploaded_file = upload_pdf()
     if st.button("Generate Quiz"):
+        st.session_state.generate_button_click = True
         if uploaded_file:
             #st.session_state.file_uploaded = True
             st.write(f"Uploaded File name: {uploaded_file.name}")
             pdf_processor.process_pdf(uploaded_file)
             get_question_from_pdf(pdf_processor)
+            display_question()
         else:
             st.error("Please upload a PDF file before processing.")
     
-    display_question()
+    if st.session_state.generate_button_click == True:
+        if st.button("Display Answer"):
+            display_answer()
 
-    
-    
-
+    if st.button("Stop Quiz"):
+        reset_session_state()
+        st.stop()
 
 
 if __name__ == "__main__":
