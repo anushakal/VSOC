@@ -2,12 +2,10 @@ import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from pinecone import ServerlessSpec
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.vectorstores import VectorStoreRetriever
-import ast
 
 class Pdf():
 
@@ -22,7 +20,6 @@ class Pdf():
 
   def load_pdf_document(self, uploaded_file):
     if uploaded_file.type == "application/pdf":
-        # Save the uploaded file to a temporary location
         with open(uploaded_file.name, "wb") as f:
             f.write(uploaded_file.getbuffer())
     
@@ -65,21 +62,5 @@ class Pdf():
       pdf_data = self.load_pdf_document(uploaded_file)
       pdf_chunks = self.chunk_pdf_data(pdf_data)
       self.create_embeddings_and_index(pdf_chunks)
-      #return self.answer_query()
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
 
 
