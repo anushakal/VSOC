@@ -8,10 +8,12 @@ def load_api_keys():
     openai_api_key = st.secrets['OPENAI_API_KEY']
 
 def initialize_session_state():
+    if 'pdf_processor' not in st.session_state:
+        st.session_state.pdf_processor = None
     if 'file_uploaded' not in st.session_state:
         st.session_state.file_uploaded = False
-    if 'selected_option' not in st.session_state:
-        st.session_state.selected_option = None
+    if 'quiz_started' not in st.session_state:
+        st.session_state.quiz_started = None
     if 'question' not in st.session_state:
         st.session_state.question = None
     if 'options' not in st.session_state:
@@ -19,82 +21,93 @@ def initialize_session_state():
     if 'correct_answer' not in st.session_state:
         st.session_state.correct_answer = None
     if 'answer_feedback' not in st.session_state:
-        st.session_state.answer_feedback = None
-    if 'generate_button_click' not in st.session_state:
-        st.session_state.generate_button_click = False
+        st.session_state.answer_feedback = None 
+    if 'question_difficulty' not in st.session_state:
+        st.session_state.question_difficulty = "medium"  
 
 def reset_session_state():
+    st.session_state.pdf_processor = None
     st.session_state.file_uploaded = False
+    st.session_state.quiz_started = None
+    reset_question_state()
+   
+def reset_question_state():
     st.session_state.question = None
     st.session_state.options = []
     st.session_state.correct_answer = None
-    st.session_state.answer_feedback = None
-    st.session_state.generate_button_click = False
 
-
-def upload_pdf():
-    if not st.session_state.file_uploaded:
-        uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
-        return uploaded_file
-    return None
 
 def display_title():
     st.title("Vizuara Adaptive Q/A Generator")
-    st.subheader("Answer adaptive questions based on your uploaded PDF!")
 
-def get_question_from_pdf(pdf_processor):
-    question, options, correct_answer = pdf_processor.answer_query()
-    st.session_state.question = question
-    st.session_state.options = options
-    st.session_state.correct_answer = correct_answer
-    st.session_state.selected_option = None
+def get_question_from_pdf():
+    if st.session_state.pdf_processor:
+        if st.session_state.answer_feedback is not None:
+            if st.session_state.answer_feedback == True:
+                st.session_state.question_difficulty = "hard"
+            else:
+                st.session_state.question_difficulty = "easy"
+        question, options, correct_answer = st.session_state.pdf_processor.answer_query(st.session_state.question_difficulty)
+        st.session_state.question = question
+        st.session_state.options = options
+        st.session_state.correct_answer = correct_answer
+        st.session_state.answer_feedback = None
 
 def display_question():
-    if st.session_state.question:
-        st.write("Following is the quiz based on the uploaded PDF:")
-        st.markdown(f"**{st.session_state.question}**")
-
-        # Display the options as radio buttons
-        st.session_state.selected_option = st.radio("Select an option:", st.session_state.options)
-
-def display_answer():
-    if st.session_state.selected_option:
-        st.write(f"You selected: {st.session_state.selected_option}")
-        st.markdown(f"**Correct Answer: {st.session_state.correct_answer}**")
-        if st.session_state.selected_option == st.session_state.correct_answer:
-            st.success("Correct! Well done.")
+    st.markdown(f"**{st.session_state.question}**")
+    form = st.form(key = "quiz")
+    user_choice = form.radio("Choose an answer:", st.session_state.options, index=None)
+    submitted = form.form_submit_button("Submit your answer")
+    if submitted:
+        if user_choice == st.session_state.correct_answer:
+            st.success("Correct! Well done")
+            st.session_state.answer_feedback = True
         else:
-            st.error("Incorrect. Try again.")
-
-    else:
-        st.write("You have not selected any option yet.")
-
+            st.error("Incorrect!")
+            st.markdown(f"You selected: {user_choice}\n  Correct Answer : **{st.session_state.correct_answer}**")
+            st.session_state.answer_feedback = False
+        reset_question_state()
+        
 def main():
 
     load_api_keys()
-    pdf_processor = Pdf(openai_api_key)
     initialize_session_state()
     display_title()
-
-    uploaded_file = upload_pdf()
-    if st.button("Generate Quiz"):
-        st.session_state.generate_button_click = True
+    if not st.session_state.file_uploaded:
+        uploaded_file = st.file_uploader("Upload a PDF file for generating questions", type="pdf")
         if uploaded_file:
-            #st.session_state.file_uploaded = True
+            st.session_state.file_uploaded = True
             st.write(f"Uploaded File name: {uploaded_file.name}")
-            pdf_processor.process_pdf(uploaded_file)
-            get_question_from_pdf(pdf_processor)
-            display_question()
-        else:
-            st.error("Please upload a PDF file before processing.")
+            with st.spinner("Processing the PDF"):
+                st.session_state.pdf_processor = Pdf(openai_api_key)
+                st.session_state.pdf_processor.process_pdf(uploaded_file)
     
-    if st.session_state.generate_button_click == True:
-        if st.button("Display Answer"):
-            display_answer()
+    if st.session_state.file_uploaded:
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button('Start Quiz', key='start'):
+                st.session_state.quiz_started = True
+        
+        with col2:
+            if st.button('Stop Quiz', key='stop'):
+                st.session_state.quiz_started = False
+    
+    if st.session_state.quiz_started == True:
+        if st.session_state.question == None:
+            get_question_from_pdf()
 
-    if st.button("Stop Quiz"):
+        display_question()
+        
+        if st.session_state.answer_feedback is not None:
+            if st.button("Next"):
+                with st.spinner("Preparing next question"):
+                    pass
+                #reset_question_state()
+                # get_question_from_pdf()
+    
+    elif st.session_state.quiz_started == False:
+        st.subheader("Quiz stopped!")
         reset_session_state()
-        st.stop()
 
 
 if __name__ == "__main__":
