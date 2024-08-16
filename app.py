@@ -21,12 +21,9 @@ def initialize_session_state():
     if 'correct_answer' not in st.session_state:
         st.session_state.correct_answer = None
     if 'answer_feedback' not in st.session_state:
-        st.session_state.answer_feedback = None
-    # # Initialize session state for quiz status
-    
-    # if 'display_answer' not in st.session_state:
-    #     st.session_state.display_answer = False
-    
+        st.session_state.answer_feedback = None 
+    if 'question_difficulty' not in st.session_state:
+        st.session_state.question_difficulty = "medium"  
 
 def reset_session_state():
     st.session_state.pdf_processor = None
@@ -45,10 +42,16 @@ def display_title():
 
 def get_question_from_pdf():
     if st.session_state.pdf_processor:
-        question, options, correct_answer = st.session_state.pdf_processor.answer_query()
+        if st.session_state.answer_feedback is not None:
+            if st.session_state.answer_feedback == True:
+                st.session_state.question_difficulty = "hard"
+            else:
+                st.session_state.question_difficulty = "easy"
+        question, options, correct_answer = st.session_state.pdf_processor.answer_query(st.session_state.question_difficulty)
         st.session_state.question = question
         st.session_state.options = options
         st.session_state.correct_answer = correct_answer
+        st.session_state.answer_feedback = None
 
 def display_question():
     st.markdown(f"**{st.session_state.question}**")
@@ -97,7 +100,8 @@ def main():
         
         if st.session_state.answer_feedback is not None:
             if st.button("Next"):
-                st.write("next")
+                with st.spinner("Preparing next question"):
+                    pass
                 #reset_question_state()
                 # get_question_from_pdf()
     
