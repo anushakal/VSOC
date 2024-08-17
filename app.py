@@ -23,7 +23,9 @@ def initialize_session_state():
     if 'answer_feedback' not in st.session_state:
         st.session_state.answer_feedback = None 
     if 'question_difficulty' not in st.session_state:
-        st.session_state.question_difficulty = "medium"  
+        st.session_state.question_difficulty = "easy"  # Start with easy difficulty
+    if 'difficulty_level' not in st.session_state:
+        st.session_state.difficulty_levels =["easy", "medium", "hard"]  
 
 def reset_session_state():
     st.session_state.pdf_processor = None
@@ -40,13 +42,23 @@ def reset_question_state():
 def display_title():
     st.title("Vizuara Adaptive Q/A Generator")
 
+def update_difficulty_level():
+    difficulty_levels = st.session_state.difficulty_levels
+    current_index = difficulty_levels.index(st.session_state.question_difficulty)
+    print(f"diff earlier:{st.session_state.question_difficulty}")
+    if st.session_state.answer_feedback:
+        # Move up the difficulty level if possible
+        if current_index < len(difficulty_levels) - 1:
+            st.session_state.question_difficulty = difficulty_levels[current_index + 1]
+    else:
+        # Move down the difficulty level if possible
+        if current_index > 0:
+            st.session_state.question_difficulty = difficulty_levels[current_index - 1]
+    print(f"diff later:{st.session_state.question_difficulty}")
+
+
 def get_question_from_pdf():
     if st.session_state.pdf_processor:
-        if st.session_state.answer_feedback is not None:
-            if st.session_state.answer_feedback == True:
-                st.session_state.question_difficulty = "hard"
-            else:
-                st.session_state.question_difficulty = "easy"
         question, options, correct_answer = st.session_state.pdf_processor.answer_query(st.session_state.question_difficulty)
         st.session_state.question = question
         st.session_state.options = options
@@ -54,8 +66,11 @@ def get_question_from_pdf():
         st.session_state.answer_feedback = None
 
 def display_question():
+    # Display the current difficulty level
+    st.markdown(f"**Current Difficulty Level: {st.session_state.question_difficulty.capitalize()}**")
+    # Display the question
     st.markdown(f"**{st.session_state.question}**")
-    form = st.form(key = "quiz")
+    form = st.form(key="quiz")
     user_choice = form.radio("Choose an answer:", st.session_state.options, index=None)
     submitted = form.form_submit_button("Submit your answer")
     if submitted:
@@ -64,12 +79,12 @@ def display_question():
             st.session_state.answer_feedback = True
         else:
             st.error("Incorrect!")
-            st.markdown(f"You selected: {user_choice}\n  Correct Answer : **{st.session_state.correct_answer}**")
+            st.markdown(f"You selected: {user_choice}\n  Correct Answer: **{st.session_state.correct_answer}**")
             st.session_state.answer_feedback = False
+        update_difficulty_level()
         reset_question_state()
         
 def main():
-
     load_api_keys()
     initialize_session_state()
     display_title()

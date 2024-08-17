@@ -85,20 +85,20 @@ class Pdf():
   #   return question, options, correct_answer
 
 
-  def answer_query(self, difficulty, 
-                 retriever_query="""
+  def answer_query(self, difficulty): 
+                 
+    retriever_query=f"""
                  Please analyze the document and frame a unique Multiple choice question that focuses on different aspects of the content.
+                 The difficulty level of the question should be: {difficulty}.
                  The question should be of MCQ format strictly. No fill in the blanks or explanation or true or false questions.
                  The output should be in JSON format with the following structure:
-                 {
+                 {{
                      "question": "Text of the question",
                      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
                      "correct_answer": "Correct Answer"
-                 }
+                 }}
                  The JSON should contain no extra fields, just the keys "question", "options", and "correct_answer".
-                 """):
-    
-    retriever_query += f"\nAdjust the difficulty of the question to be {difficulty}."
+                 """
     retriever = self.vector_store.as_retriever()
     qa = RetrievalQA.from_chain_type(llm=self.llm, chain_type='stuff', retriever=retriever)
     result = qa.invoke(retriever_query)['result']
